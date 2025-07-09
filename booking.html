@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hotel Paradise - Book Your Stay</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <style>
+    body {
+      font-family: 'Playfair Display', serif;
+      background: linear-gradient(to right, #2c3e50, #3498db);
+      color: #fff;
+      min-height: 100vh;
+    }
+    .booking-container {
+      background-color: rgba(0, 0, 0, 0.75);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      max-width: 1000px;
+      margin: auto;
+    }
+    .form-label {
+      color: #f1c40f;
+      font-weight: 500;
+    }
+    .form-control, .form-select, textarea {
+      border-radius: 10px;
+    }
+    .form-control:focus, .form-select:focus, textarea:focus {
+      border-color: #f1c40f;
+      box-shadow: 0 0 10px #f1c40f;
+    }
+    .btn-primary {
+      background-color: #f1c40f;
+      border: none;
+      padding: 12px 30px;
+      font-weight: bold;
+      border-radius: 30px;
+      transition: background 0.3s ease;
+    }
+    .btn-primary:hover {
+      background-color: #d4ac0d;
+    }
+    h2 {
+      color: #f1c40f;
+    }
+    .room-preview img {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    .summary-box {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 15px;
+    }
+    .room-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      border: none;
+      font-weight: bold;
+      background-color: #27ae60;
+      color: #fff;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+    .room-btn:hover {
+      background-color: #2ecc71;
+    }
+    .room-btn.booked {
+  background-color: #e74c3c;
+  cursor: not-allowed;
+}
+
+    .room-btn.selected {
+      background-color: #f1c40f !important;
+      color: #000;
+      outline: 2px solid #e67e22;
+      box-shadow: 0 0 10px rgba(230, 126, 34, 0.8);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container py-5">
+  <div class="booking-container">
+    <h2 class="text-center mb-4">Book Your Stay at <span style="color: #fff;">Hotel Paradise</span></h2>
+
+    <form id="bookingForm" class="row g-3">
+      <div class="col-md-6">
+        <label for="name" class="form-label">Full Name</label>
+        <input type="text" class="form-control" id="name" placeholder="John Doe" required />
+      </div>
+      <div class="col-md-6">
+        <label for="email" class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="email" placeholder="john@example.com" required />
+      </div>
+      <div class="col-md-6">
+        <label for="phone" class="form-label">Phone Number</label>
+        <input type="tel" class="form-control" id="phone" placeholder="+1 234 567 890" required />
+      </div>
+      <div class="col-md-3">
+<label for="checkin" class="form-label">Check-In Date:</label>
+<input type="text" id="checkin" class="form-control" name="checkin" placeholder="Select date" required>
+      </div>
+      <div class="col-md-3">
+        <label for="checkout" class="form-label">Check-Out Date:</label>
+<input type="text" id="checkout" class="form-control" name="checkout" placeholder="Select date" required>
+      </div>
+      <div class="col-md-6">
+        <label for="roomType" class="form-label">Room Type</label>
+        <select class="form-select" id="roomType" required>
+          <option selected disabled>Choose...</option>
+          <option value="single" data-price="3000">Single Room – ₹3,000</option>
+          <option value="double" data-price="5000">Double Room – ₹5,000</option>
+          <option value="deluxe" data-price="7000">Deluxe Room – ₹7,000</option>
+          <option value="suite" data-price="10000">Luxury Suite – ₹10,000</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="guests" class="form-label">Number of Guests</label>
+        <input type="number" class="form-control" id="guests" min="1" max="10" value="1" required />
+      </div>
+      <div class="col-md-12">
+        <label class="form-label">Select Available Room Number</label>
+        <div id="roomGrid" class="d-flex flex-wrap gap-2"></div>
+        <input type="hidden" id="selectedRoomNumber" name="roomNumber" />
+      </div>
+      <div class="col-12">
+        <label for="requests" class="form-label">Special Requests</label>
+        <textarea class="form-control" id="requests" rows="3" placeholder="E.g., Late check-in, extra pillows, etc."></textarea>
+      </div>
+      <div class="col-md-6 room-preview">
+        <label class="form-label">Room Preview</label>
+        <div id="roomImage">
+          <img src="" alt="Room Preview" class="img-fluid d-none" />
+        </div>
+      </div>
+      <div class="col-md-6 summary-box">
+        <h5 class="text-warning">Booking Summary</h5>
+        <p id="summary">Please fill out the form to see summary.</p>
+      </div>
+      <div class="col-12 text-center mt-4">
+        <button type="submit" class="btn btn-primary" disabled>Confirm Booking</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  const roomType = document.getElementById("roomType");
+  const checkin = document.getElementById("checkin");
+  const checkout = document.getElementById("checkout");
+  const guests = document.getElementById("guests");
+  const summary = document.getElementById("summary");
+  const roomImage = document.getElementById("roomImage").querySelector("img");
+  const roomGrid = document.getElementById("roomGrid");
+  const selectedRoomInput = document.getElementById("selectedRoomNumber");
+  const confirmButton = document.querySelector("button[type='submit']");
+  const allInputs = document.querySelectorAll("input, select, textarea");
+
+  const roomImages = {
+    single: "/images/singleroom.webp",
+    double: "/images/doubleroom.png",
+    deluxe: "/images/deluxeroom.webp",
+    suite: "/images/suiteroom.jpeg"
+  };
+
+  const roomNumberMap = {
+    single: Array.from({ length: 50 }, (_, i) => `SIR${(i + 1).toString().padStart(2, '0')}`),
+    double: Array.from({ length: 50 }, (_, i) => `DBL${(i + 1).toString().padStart(2, '0')}`),
+    deluxe: Array.from({ length: 50 }, (_, i) => `DLX${(i + 1).toString().padStart(2, '0')}`),
+    suite: Array.from({ length: 50 }, (_, i) => `SUI${(i + 1).toString().padStart(2, '0')}`)
+  };
+
+  let selectedRooms = [];
+
+  function updateSummary() {
+    if (!roomType.value || !checkin.value || !checkout.value) return;
+
+    const checkinDate = new Date(checkin.value);
+    const checkoutDate = new Date(checkout.value);
+    const nights = (checkoutDate - checkinDate) / (1000 * 60 * 60 * 24);
+    const roomPrice = parseInt(roomType.options[roomType.selectedIndex].dataset.price || 0);
+    const guestCount = parseInt(guests.value || 1);
+
+    if (isNaN(nights) || nights <= 0 || isNaN(roomPrice)) return;
+
+    const total = nights * roomPrice;
+
+    summary.innerHTML = `
+      <strong>Room Type:</strong> ${roomType.options[roomType.selectedIndex].textContent}<br>
+      <strong>Guests:</strong> ${guestCount}<br>
+      <strong>Check-in:</strong> ${checkin.value}<br>
+      <strong>Check-out:</strong> ${checkout.value}<br>
+      <strong>Selected Room(s):</strong> ${selectedRooms.join(', ') || "None"}<br>
+      <strong>Price per night:</strong> ₹${roomPrice}<br>
+      <strong>Total:</strong> ₹${total}
+    `;
+
+    const imageSrc = roomImages[roomType.value];
+    if (imageSrc) {
+      roomImage.src = imageSrc;
+      roomImage.classList.remove("d-none");
+    }
+  }
+
+  function selectRoom(roomNumber) {
+    selectedRooms = [roomNumber]; 
+    document.querySelectorAll(".room-btn").forEach(btn => btn.classList.remove("selected"));
+    document.querySelector(`button[data-room="${roomNumber}"]`).classList.add("selected");
+    selectedRoomInput.value = selectedRooms.join(", ");
+    toggleSubmitButton();
+    updateSummary();
+  }
+
+  function toggleSubmitButton() {
+    confirmButton.disabled = !(
+      roomType.value &&
+      checkin.value &&
+      checkout.value &&
+      guests.value &&
+      selectedRooms.length > 0
+    );
+  }
+
+  async function renderRooms() {
+  const room = roomType.value;
+  const checkinVal = checkin.value;
+  const checkoutVal = checkout.value;
+
+  roomGrid.innerHTML = "";
+
+  if (!room || !checkinVal || !checkoutVal) return;
+
+  let bookedRooms = [];
+  try {
+    const res = await fetch(`http://localhost:3000/api/booked-rooms?roomType=${room}&checkinDate=${checkinVal}&checkoutDate=${checkoutVal}`);
+    const data = await res.json();
+    bookedRooms = data.bookedRooms || [];
+  } catch (err) {
+    console.error("Error fetching booked rooms:", err);
+  }
+
+  roomNumberMap[room].forEach(roomNumber => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = roomNumber;
+    button.classList.add("room-btn");
+    button.setAttribute("data-room", roomNumber);
+
+    if (bookedRooms.includes(roomNumber)) {
+      button.classList.add("booked");
+      button.disabled = true;
+    } else {
+      button.onclick = () => selectRoom(roomNumber);
+    }
+
+    roomGrid.appendChild(button);
+  });
+}
+
+
+ roomType.addEventListener("change", () => {
+  renderRooms();
+  updateSummary();
+  toggleSubmitButton();
+});
+
+checkin.addEventListener("change", () => {
+  renderRooms();
+  updateSummary();
+  toggleSubmitButton();
+});
+
+checkout.addEventListener("change", () => {
+  renderRooms();
+  updateSummary();
+  toggleSubmitButton();
+});
+
+
+  allInputs.forEach(input => {
+    input.addEventListener("input", () => {
+      updateSummary();
+      toggleSubmitButton();
+    });
+    input.addEventListener("change", () => {
+      updateSummary();
+      toggleSubmitButton();
+    });
+  });
+function calculateTotalPrice() {
+  const checkinDate = new Date(checkin.value);
+  const checkoutDate = new Date(checkout.value);
+  const nights = (checkoutDate - checkinDate) / (1000 * 60 * 60 * 24);
+  const roomPrice = parseInt(roomType.options[roomType.selectedIndex].dataset.price || 0);
+  return nights * roomPrice;
+}
+
+  document.getElementById("bookingForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const payload = {
+    customer_name: document.getElementById("name").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    room_type: document.getElementById("roomType").value,
+    room_number: document.getElementById("selectedRoomNumber").value,
+    checkin_date: document.getElementById("checkin").value,
+    checkout_date: document.getElementById("checkout").value,
+    guests: parseInt(document.getElementById("guests").value),
+    special_requests: document.getElementById("requests").value.trim(),
+    total_price: calculateTotalPrice()
+  };
+
+  try {
+    const response = await fetch("http://localhost:3000/api/bookings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert("Booking confirmed!");
+      window.location.reload(); 
+    } else {
+      alert("Booking failed: " + result.message);
+    }
+  } catch (err) {
+    console.error("Booking error:", err);
+    alert("Network error. Check console for details.");
+  }
+});
+flatpickr("#checkin", {
+    dateFormat: "Y-m-d",
+    minDate: "today",
+    onChange: function(selectedDates, dateStr, instance) {
+      document.getElementById("checkout")._flatpickr.set("minDate", dateStr);
+    }
+  });
+
+  flatpickr("#checkout", {
+    dateFormat: "Y-m-d",
+    minDate: "today"
+  });
+</script>
+</body>
+</html>
